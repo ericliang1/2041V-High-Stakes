@@ -51,9 +51,9 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(5, // proportional gain (kP)
+lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              30, // derivative gain (kD)
+                                            20, // derivative gain (kD)
                                               3, // anti windup
                                               1, // small error range, in degrees
                                               100, // small error range timeout, in milliseconds
@@ -112,8 +112,8 @@ void auton_selector() {
 
     controller.print(0, 0, "Auton: %d", selectedAuton);
 }
-
 // initialize function. Runs on program startup
+int arm_state = 0;
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
@@ -128,6 +128,18 @@ void initialize() {
             pros::delay(20);
         }
     });
+    
+    pros::Task arm_task([&]() {
+        while (true) {
+            if (arm_state == 0) {
+                intake.move(0);
+            } else {
+                intake.move(127);
+            }
+            pros::delay(20);
+        }
+    });
+    
 }
 
 void disabled() {
@@ -139,6 +151,14 @@ void competition_initialize() {
 }
 
 void auton1() {
+    chassis.setPose(0, 0, 0);
+    //chassis.turnToHeading(90, 2000);
+    //chassis.moveToPoint(20, 0, 2000);
+    chassis.moveToPose(24, 24, 90, 2000);
+    chassis.moveToPose(0, 0, 90, 2000);
+    chassis.moveToPose(24, 24, 270, 2000);
+    chassis.moveToPose(0, 0, 0, 2000);
+    /*
     chassis.setPose(0, 0, 0);
     clamp.set_value(true);
     chassis.moveToPoint(0, -24, 2000, {.forwards = false, .maxSpeed = 50});
@@ -160,9 +180,14 @@ void auton1() {
     intake2.move_velocity(0);
     clamp.set_value(true);
     chassis.moveToPoint(20, -46, 2000, {.maxSpeed = 50});
+    */
 }
 
 void auton2() {
+    arm_state = 1;
+    pros::delay(1000);
+    arm_state = 0;
+    /*
     chassis.setPose(0, 0, 0);
     clamp.set_value(true);
     chassis.moveToPoint(0, -24, 2000, {.forwards = false, .maxSpeed = 50});
@@ -185,6 +210,7 @@ void auton2() {
     chassis.moveToPoint(0, -30, 2000);
     chassis.turnToPoint(-15, -48, 2000);
     chassis.moveToPoint(-15, -48, 2000, {.maxSpeed = 50});
+    */
 }
 
 void autonomous() {
