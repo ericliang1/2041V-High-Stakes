@@ -1,22 +1,25 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/abstract_motor.hpp"
 #include "pros/misc.h"
 
 //controller
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
-pros::Motor intake (20);
-pros::Motor intake2 (4);
+pros::Motor intake (10);
+pros::Motor arm (7);
+
+pros::Rotation rotation (9);
 
 pros::adi::DigitalOut doinker ('D');
-pros::adi::DigitalOut clamp('A');
+pros::adi::DigitalOut clamp ('A');
 
 
 // left motor group
-pros::MotorGroup left_motor_group({-11, -8, -15}, pros::MotorGears::blue);
+pros::MotorGroup left_motor_group({6, -8, -20}, pros::MotorGears::blue);
 // right motor group
-pros::MotorGroup right_motor_group({16, 18, 19}, pros::MotorGears::blue);
+pros::MotorGroup right_motor_group({2, -3, 5}, pros::MotorGears::blue);
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
@@ -113,11 +116,13 @@ void auton_selector() {
     controller.print(0, 0, "Auton: %d", selectedAuton);
 }
 // initialize function. Runs on program startup
-int arm_state = 0;
+int arm_state = 1;
+bool enable_pid = false;
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
     // print position to brain screen
+    arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     pros::Task screen_task([&]() {
         while (true) {
             // print robot location to the brain screen
@@ -130,14 +135,41 @@ void initialize() {
     });
     
     pros::Task arm_task([&]() {
+        int angle = 0;
+        int kp = 3; 
+        int maxvolt = 80;
         while (true) {
             if (arm_state == 0) {
-                intake.move(0);
-            } else {
-                intake.move(127);
+                angle = 230;
             }
+            else if (arm_state == 1) {
+                angle = 195;
+            }
+            else if (arm_state == 2) {
+                angle = 92;
+            }
+
+            int error = angle - rotation.get_angle() / 100;
+
+            if (fabs(error) > 2 && enable_pid) {
+                int speed = kp * error;
+                if (speed < -maxvolt) {
+                    speed = -maxvolt;
+                }
+                if (speed > maxvolt) {
+                    speed = maxvolt;
+                }
+                arm.move(speed);
+    
+            } 
+            else {
+                arm.brake();
+                enable_pid = false;
+            }
+
             pros::delay(20);
         }
+
     });
     
 }
@@ -227,17 +259,14 @@ void autonomous() {
 void intake_control() {
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         intake.move(127);
-        intake2.move(-127);
     }
     
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
         intake.move(-127);
-        intake2.move(127);
     }   
     
     else {
         intake.move_velocity(0);
-        intake2.move_velocity(0);
     }
 }
 
@@ -246,7 +275,7 @@ bool toggle = false;
 bool latch = false;
 
 void clamp_control() {
-    if (toggle){
+    if (toggle) {
         clamp.set_value(false);
     } 
     else {
@@ -268,7 +297,7 @@ bool toggle2 = false;
 bool latch2 = false;
 
 void doinker_control() {
-    if (toggle2){
+    if (toggle2) {
         doinker.set_value(true);
     } 
     else {
@@ -276,13 +305,27 @@ void doinker_control() {
     }
 
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)) {
-        if(!latch2){ 
+        if(!latch2) { 
             toggle2 = !toggle2;
             latch2 = true;
         }
     } 
     else {
         latch2 = false; 
+    }
+}
+
+bool button_pressed = false;
+void arm_control() {
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        if (!button_pressed) {
+            arm_state = (arm_state + 1) % 3;
+            enable_pid = true;
+            button_pressed = true;
+        }
+    }
+    else {
+        button_pressed = false;
     }
 }
 
@@ -297,9 +340,9 @@ void opcontrol() {
         // move the robot
         chassis.arcade(leftY, rightX);
         intake_control();
-
         doinker_control();
         clamp_control();
+        arm_control();
 
         // delay to save resources
         pros::delay(25);
