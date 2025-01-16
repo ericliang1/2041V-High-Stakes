@@ -15,7 +15,7 @@ _______________      _____ ________   ____
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
-pros::Motor intake (5);
+pros::Motor intake (-5);
 pros::Motor arm (2);
 pros::Motor arm2 (10);
 pros::Rotation rotation (11);
@@ -306,42 +306,144 @@ void auton1() {
     chassis.moveToPoint(-32.5, 26, 2000, {.forwards = false});
     chassis.moveToPoint(-72, 64, 2000, {.maxSpeed = 100});
     pros::delay(3000);
+    /*
     chassis.moveToPoint(-18, 18, 2000);
     arm_state = 2;
     enable_pid = true;
+    */
+    chassis.moveToPoint(-40, -10, 2000);
 
 }
 
 //red rush
 void auton2() {
     clamp.set_value(true);
-    chassis.setPose(-59, 10, 180);
-    chassis.moveToPoint(-59, -3, 2000);
-    pros::delay(1000);
-    chassis.turnToHeading(230, 2000);
-    chassis.turnToPoint(-35, 13.6, 2000, {.forwards = false});
-    chassis.moveToPoint(-36.5, 12.5, 2000);
-    arm_state = 2;
-    enable_pid = true;
-    pros::delay(1000);
-    arm_state = 0;
-    enable_pid = true;
-    chassis.moveToPoint(-28, 14, 2000, {.forwards = false, .maxSpeed = 60});
+    chassis.setPose(-52, -62, 90);
+    chassis.moveToPoint(-27, -62, 2000, {.minSpeed = 127, .earlyExitRange = 5});
+    chassis.moveToPoint(-17, -57, 2000, {.minSpeed = 80, .earlyExitRange = 3});
+    pros::delay(650);
+    doinker.set_value(true);
+    pros::delay(300);
+    chassis.moveToPoint(-31.5, -62, 2000, {.forwards = false});
+    pros::delay(1300);
+    doinker.set_value(false);
+    chassis.turnToPoint(-17.5, -66.5, 2000, {.forwards = false});
+    chassis.moveToPoint(-17.5, -66.5, 2000, {.forwards = false, .maxSpeed = 60});
     pros::delay(1300);
     clamp.set_value(false);
+    chassis.moveToPoint(-33, -53.5, 2000, {.maxSpeed = 80});
     intakeDirection = "forward";
-    intakeTime = 12000;
-    chassis.moveToPoint(-24.3, 38, 2000, {.maxSpeed = 80});
-    chassis.turnToPoint(-7.8, 34.5, 2000);
-    chassis.moveToPoint(-7.8, 34.5, 2000, {.maxSpeed = 80});
-    chassis.moveToPoint(-23.4, 46.6, 2000, {.forwards = false});
-    chassis.turnToPoint(-7, 46.6, 2000);
-    chassis.moveToPoint(-7, 46.6, 2000, {.maxSpeed = 80});
-    chassis.moveToPoint(-34.6, 27.2, 2000, {.forwards = false});
-    arm_state = 2;
-    enable_pid = true;
-    chassis.moveToPoint(-17.2, 9.5, 2000);
+    intakeTime = 1300;
+    pros::delay(1700);
+    clamp.set_value(true);
+    chassis.turnToPoint(-30.2, -28, 2000, {.forwards = false});
+    chassis.moveToPoint(-30.2, -28, 2000, {.forwards = false, .maxSpeed = 60});
+    pros::delay(1300);
+    clamp.set_value(false);
+    pros::delay(300);
+    intakeTime = 2000;
+    doinker.set_value(true);
+    chassis.moveToPoint(-55, -65, 2500);
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
 
 
 }
@@ -349,8 +451,8 @@ void auton2() {
 //blue 4ring
 void auton3() {
     clamp.set_value(true);
-    chassis.setPose(0, 0, 0);
-    chassis.moveToPoint(0, -13, 2000, {.forwards = false});
+    chassis.setPose(-52, -62, 0);
+    chassis.moveToPoint(0, -62, 2000, {.forwards = false});
     chassis.turnToPoint(-13, -26, 2000, {.forwards = false});
     chassis.moveToPoint(-13, -26, 2000, {.forwards = false, .maxSpeed = 50});
     pros::delay(1300);
