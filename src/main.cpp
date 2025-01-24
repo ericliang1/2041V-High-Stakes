@@ -22,7 +22,7 @@ pros::Rotation rotation (11);
 pros::Optical optical(18);
 
 pros::Rotation horizontal_encoder(20);
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_2, -3.5);
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_2, -2.8);
 
 pros::adi::DigitalOut doinker ('A');
 pros::adi::DigitalOut clamp ('H');
@@ -102,7 +102,7 @@ lemlib::Chassis chassis(drivetrain,
 );
 
 int selectedAuton = 1;  
-int numAutons = 5;
+int numAutons = 7;
 std::string team = "red";
 void auton_selector() {
     std::string name;
@@ -137,17 +137,27 @@ void auton_selector() {
     }
 
     else if (selectedAuton == 3) {
+        name = "red solo awp";
+        team = "red";
+    }
+
+    else if (selectedAuton == 4) {
         name = "blue 4ring";
         team = "blue";
     }
 
-    else if (selectedAuton == 4) {
+    else if (selectedAuton == 5) {
         name = "blue rush";
         team = "blue";
     }
 
-    else if (selectedAuton == 5) {
-        name = "skills";
+    else if (selectedAuton == 6) {
+        name = "blue solo awp";
+        team = "blue";
+    }
+
+    else if (selectedAuton == 7) {
+        name = "forward";
         team = "nothing";
     }
     controller.print(0, 0, "Auton: %d %s", selectedAuton, name);
@@ -158,6 +168,7 @@ bool enable_pid = false;
 int colorSort = false;
 int intakeTime = 0;
 bool intakeStop = false;
+bool isAuton = true;
 std::string intakeDirection = "forward";
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
@@ -179,20 +190,19 @@ void initialize() {
     
     pros::Task intake_task([&]() { 
         while (true) {
-            if (pros::competition::is_autonomous() && intake.get_actual_velocity() >= 20 && (team == "red" || team == "blue")) {
-                optical.set_led_pwm(100);
+            if (isAuton && team == "red" || team == "blue") {
+                optical.set_led_pwm(50);
                 double hue = optical.get_hue();
-                double brightness = optical.get_brightness();
-                if (team == "red" && hue > 195 && hue < 215 && brightness >=  0.02){
+                if (team == "red" && hue > 208 && hue < 223){
                     colorSort = true;
-                    pros::delay(95);
+                    pros::delay(250);
                     intake.move(-127);
                     pros::delay(300);
                     colorSort = false;
                 }
-                if (team == "blue" && hue > 1 && hue < 20 && brightness >=  0.02) {
+                if (team == "blue" && hue > 0 && hue < 15) {
                     colorSort = true;
-                    pros::delay(100);
+                    pros::delay(250);
                     intake.move(-127);
                     pros::delay(300);
                     colorSort = false;
@@ -240,10 +250,10 @@ void initialize() {
                 angle = 75;
             }
             else if (arm_state == 1) {
-                angle = 101;
+                angle = 96.5;
             }
             else if (arm_state == 2) {
-                angle = 207.3;
+                angle = 220;
             }
 
             double error = angle - rotation.get_angle() / 100.0;
@@ -294,24 +304,21 @@ void auton1() {
     chassis.setPose(-57.84,35.89,270);
     chassis.moveToPoint(-44,35.89,2000,{.forwards = false});
     chassis.turnToPoint(-28, 25, 2000, {.forwards = false});
-    chassis.moveToPoint(-28, 25, 2000, {.forwards = false});
-    pros::delay(700);
+    chassis.moveToPoint(-28, 25, 2000, {.forwards = false, .maxSpeed = 80});
+    pros::delay(800);
     clamp.set_value(false);
-    chassis.moveToPose(-13, 60,0,2500);
+    chassis.moveToPoint(-12.2, 40, 2000, {.maxSpeed = 80});
+    pros::delay(400);
     intakeDirection = "forward";
     intakeTime = 12000;
+    chassis.moveToPoint(-12.2, 60, 2000, {.maxSpeed = 40});
     chassis.moveToPose(-28.5, 26, 45, 2000, {.forwards = false});
-    chassis.moveToPoint(-32.5, 55, 2000, {.maxSpeed = 90});
+    chassis.moveToPoint(-31.5, 55, 2000, {.maxSpeed = 90});
     pros::delay(1200);
     chassis.moveToPoint(-32.5, 26, 2000, {.forwards = false});
-    chassis.moveToPoint(-72, 64, 2000, {.maxSpeed = 100});
+    chassis.moveToPoint(-71, 64, 2000, {.maxSpeed = 100});
     pros::delay(3000);
-    /*
-    chassis.moveToPoint(-18, 18, 2000);
-    arm_state = 2;
-    enable_pid = true;
-    */
-    chassis.moveToPoint(-40, -10, 2000);
+    chassis.moveToPoint(-50, -10, 2000);
 
 }
 
@@ -320,185 +327,137 @@ void auton2() {
     clamp.set_value(true);
     chassis.setPose(-52, -62, 90);
     chassis.moveToPoint(-27, -62, 2000, {.minSpeed = 127, .earlyExitRange = 5});
-    chassis.moveToPoint(-17, -57, 2000, {.minSpeed = 80, .earlyExitRange = 3});
-    pros::delay(650);
+    chassis.moveToPoint(-17, -58, 2000, {.minSpeed = 60});
+    pros::delay(700);
     doinker.set_value(true);
-    pros::delay(300);
+    pros::delay(200);
     chassis.moveToPoint(-31.5, -62, 2000, {.forwards = false});
     pros::delay(1300);
     doinker.set_value(false);
-    chassis.turnToPoint(-17.5, -66.5, 2000, {.forwards = false});
-    chassis.moveToPoint(-17.5, -66.5, 2000, {.forwards = false, .maxSpeed = 60});
+    pros::delay(300);
+    chassis.turnToPoint(-17.5, -67, 2000, {.forwards = false});
+    chassis.moveToPoint(-17.5, -67, 2000, {.forwards = false, .maxSpeed = 60});
     pros::delay(1300);
     clamp.set_value(false);
-    chassis.moveToPoint(-33, -53.5, 2000, {.maxSpeed = 80});
+    chassis.moveToPoint(-35, -50, 2000, {.maxSpeed = 80});
     intakeDirection = "forward";
     intakeTime = 1300;
     pros::delay(1700);
     clamp.set_value(true);
-    chassis.turnToPoint(-30.2, -28, 2000, {.forwards = false});
-    chassis.moveToPoint(-30.2, -28, 2000, {.forwards = false, .maxSpeed = 60});
+    chassis.turnToPoint(-29, -27.5, 2000, {.forwards = false});
+    chassis.moveToPoint(-29, -27.5, 2000, {.forwards = false, .maxSpeed = 60});
     pros::delay(1300);
     clamp.set_value(false);
     pros::delay(300);
+    chassis.moveToPoint(-38, -55, 2500);
+    pros::delay(200);
     intakeTime = 2000;
-    doinker.set_value(true);
-    chassis.moveToPoint(-55, -65, 2500);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
+    pros::delay(1000);
+    clamp.set_value(true);
+    pros::delay(300);
+    chassis.turnToHeading(270, 2000);
 }
 
 //blue 4ring
 void auton3() {
     clamp.set_value(true);
-    chassis.setPose(-52, -62, 0);
-    chassis.moveToPoint(0, -62, 2000, {.forwards = false});
-    chassis.turnToPoint(-13, -26, 2000, {.forwards = false});
-    chassis.moveToPoint(-13, -26, 2000, {.forwards = false, .maxSpeed = 50});
-    pros::delay(1300);
-    clamp.set_value(false);
-    intake.move(127);
-    pros::delay(1100);
-    chassis.turnToPoint(-27, -26, 2000);
-    chassis.moveToPoint(-27, -26, 2000);
-    pros::delay(1500);
-    chassis.moveToPoint(-26, -19, 2000, {.forwards = false});
-    chassis.turnToPoint(-29, -34, 2000);
-    chassis.moveToPoint(-29, -34, 2000, {.maxSpeed = 60});
-    pros::delay(1200);
-    chassis.moveToPoint(-39, -18, 2000, {.forwards = false});
-    chassis.turnToPoint(-39, -34, 2000);
-    chassis.moveToPoint(-39, -34, 2000, {.maxSpeed = 60});
-    pros::delay(1200);
-    chassis.moveToPoint(-27, -9, 2000, {.forwards = false});
-    chassis.turnToPoint(-11, -25, 2000);
+    chassis.setPose(-56, 20, 0);
+    chassis.moveToPoint(-56, 2, 2000, {.forwards = false});
+    chassis.turnToHeading(270, 2000);
+    chassis.moveToPoint(-63, 0.5, 2000, {.minSpeed = 20});
+    pros::delay(850);
     arm_state = 2;
     enable_pid = true;
-    chassis.moveToPoint(-9, -25, 2000, {.maxSpeed = 80});
-    intake.move(0);
+    pros::delay(1000);
+    arm_state = 0;
+    enable_pid = true;
+    pros::delay(200);
+    chassis.moveToPoint(-22, 24, 2000, {.forwards = false, .maxSpeed = 70});
+    pros::delay(1800);
+    clamp.set_value(false);
+    pros::delay(300);
+    chassis.moveToPoint(-24.5, 49, 2000, {.maxSpeed = 70});
+    intakeDirection = "forward";
+    intakeTime = 15000;
+    chassis.moveToPoint(-24.5, 37, 2000, {.forwards = false});
+    chassis.turnToPoint(-12.5, 40, 2000);
+    chassis.moveToPoint(-12.5, 40, 2000, {.maxSpeed = 80});
+    chassis.moveToPoint(-23.4, 55, 2000, {.forwards = false});
+    chassis.turnToPoint(-12, 57, 2000);
+    chassis.moveToPoint(-12, 57, 2000, {.maxSpeed = 80});
+    chassis.moveToPoint(-34.6, 33.2, 2000, {.forwards = false});
+    arm_state = 2;
+    enable_pid = true;
+    chassis.moveToPoint(-19, 19, 2000);
+
 
 }
 
 //blue rush
 void auton4() {
     clamp.set_value(true);
-    chassis.setPose(0, 0, 0);
-    chassis.moveToPoint(0, -35, 2000, {.forwards = false});
-    chassis.turnToHeading(30, 2000);
-    chassis.moveToPoint(-10.2, -42.3, 2000, {.forwards = false, .maxSpeed = 25});
-    pros::delay(1700);
+    chassis.setPose(-57.84,-35.89,270);
+    chassis.moveToPoint(-44,-35.89,2000,{.forwards = false});
+    chassis.turnToPoint(-26, -25, 2000, {.forwards = false});
+    chassis.moveToPoint(-26, -25, 2000, {.forwards = false, .maxSpeed = 80});
+    pros::delay(800);
     clamp.set_value(false);
-    intake.move(127);
-    pros::delay(1500);
-    chassis.turnToPoint(-9, -29, 2000);
-    chassis.moveToPoint(-9, -29, 2000);
-    pros::delay(2000);
-    chassis.turnToHeading(180, 2000);
-    pros::delay(2300);
-    intake.move(0);
+    chassis.moveToPoint(-7.5, -42, 2000, {.maxSpeed = 80});
+    pros::delay(400);
+    intakeDirection = "forward";
+    intakeTime = 12000;
+    chassis.moveToPoint(-5, -60, 2000, {.maxSpeed = 60});
+    chassis.moveToPose(-26.5, -24, 115, 2000, {.forwards = false});
+    chassis.moveToPoint(-25.5, -50, 2000, {.maxSpeed = 90});
+    pros::delay(1200);
+    chassis.moveToPoint(-25.5, -33, 2000, {.forwards = false});
+    chassis.moveToPoint(-64, -68, 2000, {.maxSpeed = 100});
+    pros::delay(3000);
+    chassis.moveToPoint(-54, -58, 2000, {.forwards = false, .minSpeed = 40});
+    chassis.moveToPoint(-64, -68, 2000, {.minSpeed = 100});
 }
 
 //skills
+
+void auton5() {
+
+
+
+    
+    clamp.set_value(true);
+    chassis.setPose(-52, 62, 90);
+    chassis.moveToPoint(-24.5, 62, 2000, {.minSpeed = 127, .earlyExitRange = 5});
+    chassis.moveToPoint(-17, 61, 2000, {.minSpeed = 60});
+    pros::delay(700);
+    doinker.set_value(true);
+    pros::delay(200);
+    chassis.moveToPose(-32, 65, 90, 2000, {.forwards = false, .minSpeed = 10});
+    pros::delay(1000);
+    doinker.set_value(false);
+    pros::delay(300);
+    chassis.turnToPoint(-11.5, 58.3, 2000, {.forwards = false});
+    chassis.moveToPoint(-11.5, 58.3, 2000, {.forwards = false, .maxSpeed = 60});
+    pros::delay(1300);
+    clamp.set_value(false);
+    chassis.moveToPoint(-27, 46, 2000, {.maxSpeed = 80});
+    intakeDirection = "forward";
+    intakeTime = 900;
+    pros::delay(1700);
+    clamp.set_value(true);
+    chassis.turnToPoint(-31, 19, 2000, {.forwards = false});
+    chassis.moveToPoint(-31, 19, 2000, {.forwards = false, .maxSpeed = 60});
+    pros::delay(1300);
+    clamp.set_value(false);
+    pros::delay(300);
+    chassis.moveToPoint(-45, 49, 2500);
+    pros::delay(200);
+    intakeTime = 2000;
+    pros::delay(1000);
+    clamp.set_value(true);
+    pros::delay(300);
+    chassis.turnToHeading(270, 2000);
+}
+/*
 
 void auton5() {
     clamp.set_value(true);
@@ -578,6 +537,7 @@ void auton5() {
     pros::delay(1000);
     arm_state = 0;
     enable_pid = true;
+    */
     /*
     chassis.setPose(0, 62, 0);
     chassis.moveToPoint(0, 51, 2000, {.forwards = false});
@@ -641,6 +601,85 @@ void auton5() {
 
 
 
+//}
+
+void auton6() {
+    clamp.set_value(true);
+    chassis.setPose(56, 20, 0);
+    chassis.moveToPoint(56, 1.5, 2000, {.forwards = false});
+    chassis.turnToHeading(90, 2000);
+    chassis.moveToPoint(64, 4, 2000, {.minSpeed = 30});
+    pros::delay(850);
+    arm_state = 2;
+    enable_pid = true;
+    pros::delay(1000);
+    arm_state = 0;
+    enable_pid = true;
+    chassis.moveToPoint(21, 32, 2000, {.forwards = false, .maxSpeed = 70});
+    pros::delay(1900);
+    clamp.set_value(false);
+    pros::delay(300);
+    chassis.moveToPoint(23, 55, 2000, {.maxSpeed = 80});
+    intakeDirection = "forward";
+    intakeTime = 15000;
+    chassis.moveToPoint(25, 45, 2000, {.forwards = false, .maxSpeed = 80});
+    chassis.turnToPoint(7.5, 47, 2000);
+    chassis.moveToPoint(7.5, 47, 2000, {.maxSpeed = 80});
+    chassis.moveToPoint(23.4, 55, 2000, {.forwards = false});
+    chassis.turnToPoint(7.5, 55, 2000);
+    chassis.moveToPoint(7.5, 55, 2000, {.maxSpeed = 80});
+    chassis.moveToPoint(34.6, 33.2, 2000, {.forwards = false});
+    arm_state = 2;
+    enable_pid = true;
+    chassis.moveToPoint(18.5, 18.5, 2000);//0
+}
+
+void auton7() {
+    clamp.set_value(true);
+    chassis.setPose(-61, 0, 90);
+    intakeDirection = "forward";
+    intakeTime = 800;
+    pros::delay(600);
+    chassis.moveToPoint(-49, 0, 2000);
+    chassis.turnToHeading(0, 2000);
+    chassis.moveToPoint(-49.5, -19.5, 2000, {.forwards = false, .maxSpeed = 65});
+    pros::delay(850);
+    clamp.set_value(false);
+    intakeTime = 10000;
+    chassis.turnToPoint(-23.5, -23.5, 2000);
+    chassis.moveToPoint(-23.5, -23.5, 2000);
+    chassis.turnToPoint(-3.5, -35, 2000);
+    chassis.moveToPoint(-3.5, -35, 2000, {.maxSpeed = 100});
+    chassis.moveToPoint(23.5, -46, 2000, {.maxSpeed = 100});
+    chassis.moveToPoint(-3.5, -39, 2000, {.forwards = false, .maxSpeed = 80});
+    chassis.turnToPoint(-3.5, -57, 2000);
+    intakeTime = 3000;
+    chassis.moveToPoint(-3.5, -57, 2000, {.maxSpeed = 60});
+    arm_state = 1;
+    enable_pid = true;
+    pros::delay(1500);
+    intakeStop = true;
+    arm_state = 2;
+    enable_pid = true;
+    pros::delay(1000);
+    arm_state = 0;
+    enable_pid = true;
+    pros::delay(400);
+    chassis.moveToPoint(0, -39, 2000, {.forwards = false, .maxSpeed = 80});
+    chassis.turnToPoint(-23.5, -39, 2000);
+    intakeStop = false;
+    intakeTime = 10000;
+    chassis.moveToPoint(-23.5, -40.5, 2000);
+    chassis.moveToPoint(-60.5, -39, 2000,{.maxSpeed = 60});
+    pros::delay(200);
+    chassis.turnToPoint(-45, -55, 2000);
+    chassis.moveToPoint(-45, -55, 2000,{.maxSpeed = 60});
+    chassis.turnToPoint(45, -42, 2000);
+    chassis.moveToPoint(-55, -58, 2000, {.forwards = false, .maxSpeed = 80});
+    pros::delay(300);
+    clamp.set_value(true);
+    
+
 }
 
 
@@ -665,6 +704,14 @@ void autonomous() {
         case 5:
             auton5();
             break;
+
+        case 6:
+            auton6();
+            break;
+        
+        case 7: 
+            auton7();
+            break;
     }
 }
 
@@ -672,6 +719,7 @@ void intake_control() {
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         intake.move(127);
     }
+
     
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
         intake.move(-127);
@@ -743,6 +791,7 @@ void arm_control() {
 
 void opcontrol() {
     // loop forever
+    isAuton = false;
     while (true) {
         auton_selector();
         // get left y and right y positions
