@@ -19,10 +19,12 @@ pros::Motor intake (-5);
 pros::Motor arm (2);
 pros::Motor arm2 (10);
 pros::Rotation rotation (11);
-pros::Optical optical(18);
+pros::Optical optical(1);
 
 pros::Rotation horizontal_encoder(20);
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_2, -2.8);
+pros::Rotation vertical_encoder(18);
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_2, 2.5);
+lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_2, 0.7);
 
 pros::adi::DigitalOut doinker ('A');
 pros::adi::DigitalOut clamp ('H');
@@ -46,7 +48,7 @@ lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
 pros::Imu imu(19);
 
 // odometry settings
-lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
+lemlib::OdomSensors sensors(&vertical_tracking_wheel, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             &horizontal_tracking_wheel, // horizontal tracking wheel 1
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
@@ -81,13 +83,13 @@ lemlib::ControllerSettings angular_controller(6, // proportional gain (kP)
 
 lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
                                      10, // minimum output where drivetrain will move out of 127
-                                     1.019 // expo curve gain
+                                     1.027 // expo curve gain
 );
 
 // input curve for steer input during driver control
 lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
                                   10, // minimum output where drivetrain will move out of 127
-                                  1.019// expo curve gain
+                                  1.027// expo curve gain
 );
 
 
@@ -247,16 +249,17 @@ void initialize() {
         double previous_error = 0;
         while (true) {
             if (arm_state == 0) {
-                angle = 75;
+                angle = 175;
             }
             else if (arm_state == 1) {
-                angle = 96.5;
+                angle = 199;
             }
             else if (arm_state == 2) {
-                angle = 220;
+                angle = 310;
             }
 
             double error = angle - rotation.get_angle() / 100.0;
+            
 
             if (time_settled < 60 && enable_pid) {
                 int speed = kp * error + kd * (error - previous_error);
@@ -284,6 +287,8 @@ void initialize() {
             }
 
             previous_error = error;
+
+            pros::lcd::print(4, "angle: %f", rotation.get_angle() / 100.0);
 
             pros::delay(10);
         }
@@ -779,7 +784,19 @@ bool button_pressed = false;
 void arm_control() {
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
         if (!button_pressed) {
-            arm_state = (arm_state + 1) % 3;
+            if (arm_state == 0 || arm_state == 2) {
+                arm_state = 1;
+            }
+            else {
+                arm_state = 2;
+            }
+            enable_pid = true;
+            button_pressed = true;
+        }
+    }
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+        if (!button_pressed) {
+            arm_state = 0;
             enable_pid = true;
             button_pressed = true;
         }
